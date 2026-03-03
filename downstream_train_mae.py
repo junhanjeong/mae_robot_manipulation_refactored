@@ -10,7 +10,7 @@ import torch
 from model.forward_model_mae import MAE_Translation
 from scripts.push_trainer import PushTrainer
 from utils.get_result_vids import makeVideo
-from mae import MAE
+# from mae import MAE
 
 from transformers import ViTImageProcessor
 from transformers import ViTMAEForPreTraining

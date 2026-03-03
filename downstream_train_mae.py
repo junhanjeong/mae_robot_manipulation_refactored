@@ -71,9 +71,9 @@ def main():
   params['logdir'] = logdir
   if not (os.path.exists(logdir)):
     os.makedirs(logdir)
-    os.makedirs(logdir + "/valimages/")
-    os.makedirs(logdir + "/trainimages/")
-    os.makedirs(logdir + "/testimages/")
+    # os.makedirs(logdir + "/valimages/")
+    # os.makedirs(logdir + "/trainimages/")
+    # os.makedirs(logdir + "/testimages/")
 
   print("\n\n\nLOGGING TO: ", logdir, "\n\n\n")
 
@@ -111,14 +111,14 @@ def main():
 
   trainer.train(logdir)
 
-  makeVideo(logdir, logdir, "test")
-  makeVideo(logdir, logdir, "val")
-  makeVideo(logdir, logdir, "train")
+  # makeVideo(logdir, logdir, "test")
+  # makeVideo(logdir, logdir, "val")
+  # makeVideo(logdir, logdir, "train")
 
-  vids = sorted(glob.glob(logdir + "/*.avi"))
-  for ff in vids:
-    os.system("ffmpeg -i " + ff + " " + ff[:-4] + ".mp4")
-    os.remove(ff)
+  # vids = sorted(glob.glob(logdir + "/*.avi"))
+  # for ff in vids:
+  #   os.system("ffmpeg -i " + ff + " " + ff[:-4] + ".mp4")
+  #   os.remove(ff)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
 
 from transformers import ViTImageProcessor
-from transformers import ViTMAEForPreTraining, ViTMAEConfig
+from transformers import ViTMAEForPreTraining
 from transformers import ViTFeatureExtractor
 import torch
 import numpy as np
@@ -91,7 +91,7 @@ params = {
     'project': 'mae-pretraining',
     'run_name': 'mae-run',
     'num_workers': 8,
-    'train_layer_num': 11
+    'train_layer_num': 7
 }
 device = params["device"]
 
@@ -107,25 +107,7 @@ val_loader = make_dataloader(params, params["batch_size"], params["num_workers"]
 
 processor = ViTImageProcessor.from_pretrained("facebook/vit-mae-base")
 
-# Config ----------------------------------------------------------------
-config = ViTMAEConfig.from_pretrained("facebook/vit-mae-base")
-config.patch_size = params["patch_size"]
-config.image_size = params["img_size"]
-config.mask_ratio = params["mask_ratio"]
-config.decoder_hidden_size = params["decoder_dim"]
-config.decoder_num_hidden_layers = params["decoder_depth"]
-
-if "hidden_size" in params:
-    config.hidden_size = params["hidden_size"]
-if "intermediate_size" in params:
-    config.intermediate_size = params["intermediate_size"]
-if "num_hidden_layers" in params:
-    config.num_hidden_layers = params["num_hidden_layers"]
-if "num_attention_heads" in params:
-    config.num_attention_heads = params["num_attention_heads"]
-# ------------------------------------------------------------------------
-
-model = ViTMAEForPreTraining(config)
+model = ViTMAEForPreTraining.from_pretrained("facebook/vit-mae-base")
 model.to(device) 
 
 #############################################################################################################################
@@ -133,7 +115,8 @@ model.to(device)
 for name, param in model.named_parameters():
     param.requires_grad = False
 # encoder layer 0,1 train
-for idx in range(0, params['train_layer_num']): # ~ 6 layer
+max_train_layers = min(params['train_layer_num'], len(model.vit.encoder.layer))
+for idx in range(0, max_train_layers): # ~ 6 layer
     for name, param in model.vit.encoder.layer[idx].named_parameters():
         param.requires_grad = True
 for name, param in model.named_parameters():

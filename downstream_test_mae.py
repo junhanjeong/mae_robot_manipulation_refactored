@@ -41,12 +41,6 @@ def build_parser():
         default="/home/junhan/mae_robot_manipulation_refactored/results/trashpolicy_todo_alex_04-03-2026_10-26-44/params.json",
         help="optional path to params.json from a previous downstream run",
     )
-    parser.add_argument(
-        "--save_predictions",
-        type=str,
-        default="",
-        help="optional path to save prediction json",
-    )
 
     for key, value in DEFAULTS.items():
         arg_name = f"--{key}"
@@ -101,49 +95,50 @@ def load_checkpoint_weights(model, checkpoint_path, device):
 
 def build_test_loader(params):
     test_set = PushDataset("test", params)
-    loader = DataLoader(
-        test_set,
-        batch_size=params["batch_size"],
-        shuffle=False,
-        num_workers=params["num_workers"],
-        pin_memory=torch.cuda.is_available(),
-        drop_last=False,
-    )
+    num_workers = params["num_workers"]
+    loader_kwargs = {
+        "dataset": test_set,
+        "batch_size": params["batch_size"],
+        "shuffle": False,
+        "num_workers": num_workers,
+        "pin_memory": torch.cuda.is_available(),
+        "drop_last": False,
+    }
+    if num_workers > 0:
+        loader_kwargs["persistent_workers"] = True
+        loader_kwargs["prefetch_factor"] = 4
+    loader = DataLoader(**loader_kwargs)
     return loader, len(test_set)
 
 
-def run_inference(model, loader, device, save_predictions_path=""):
-    predictions = [] if save_predictions_path else None
+def run_inference(model, loader, device):
     total_samples = 0
+    batch_errors = []
 
     start = time.time()
     model.eval()
     with torch.inference_mode():
-        for batch_img_names, batch_imgs, _, _, _ in tqdm(
+        for _, batch_imgs, batch_actions, _, _ in tqdm(
             loader, desc="Inference", total=len(loader)
         ):
             batch_imgs = batch_imgs.to(device, non_blocking=True)
-            pred_pos = model(batch_imgs).detach().cpu()
+            batch_actions = batch_actions.to(device, non_blocking=True)
+            pred_pos = model(batch_imgs)
+            real_positions = batch_actions[:, 0]
+
+            pred_pos = pred_pos.reshape(pred_pos.size(0), -1)
+            real_positions = real_positions.reshape(real_positions.size(0), -1).float()
+            batch_error = torch.mean((pred_pos - real_positions) ** 2)
+            batch_errors.append(batch_error.item())
 
             batch_size = pred_pos.size(0)
             total_samples += batch_size
 
-            if predictions is not None:
-                for img_name, pred in zip(batch_img_names, pred_pos.tolist()):
-                    predictions.append({"image": img_name, "pred_translation": pred})
-
     elapsed = time.time() - start
     speed = total_samples / elapsed if elapsed > 0 else 0.0
+    test_error = sum(batch_errors) / len(batch_errors) if batch_errors else float("nan")
+    print(f"Test Error: {test_error:.6f}")
     print(f"Inference done: {total_samples} samples, {elapsed:.2f}s, {speed:.2f} samples/s")
-
-    if predictions is not None:
-        save_dir = os.path.dirname(save_predictions_path)
-        if save_dir:
-            os.makedirs(save_dir, exist_ok=True)
-        with open(save_predictions_path, "w") as f:
-            json.dump(predictions, f, indent=2)
-            f.write("\n")
-        print(f"Saved predictions: {save_predictions_path}")
 
 
 def main():
@@ -155,6 +150,12 @@ def main():
         "cuda:" + str(params["which_gpu"]) if torch.cuda.is_available() else "cpu"
     )
     print("Device:", device)
+    print(
+        f"DataLoader config: batch_size={params['batch_size']}, "
+        f"num_workers={params['num_workers']}"
+    )
+    if device.type == "cuda":
+        torch.backends.cudnn.benchmark = True
 
     model_path = os.path.join(params["pretrain_path"], "transformer-mae-model")
     pretrained_mae = ViTMAEForPreTraining.from_pretrained(model_path)
@@ -173,7 +174,6 @@ def main():
         model=model,
         loader=test_loader,
         device=device,
-        save_predictions_path=args.save_predictions,
     )
 
 

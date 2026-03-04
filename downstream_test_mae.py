@@ -3,43 +3,24 @@ import os
 import time
 
 import torch
-import wandb
+from torch.utils.data import DataLoader
 
+from dataloader.PushDataset import PushDataset
 from model.forward_model_mae import MAE_Translation
-from scripts.push_trainer import PushTrainer
 from transformers import ViTMAEForPreTraining
 
 
 DEFAULTS = {
     "pretrain_path": "",
-    "train_dir": "",
-    "val_dir": "",
     "test_dir": "",
     "which_gpu": 0,
-    "save_dir": "results",
-    "exp_name": "todo",
     "batch_size": 16,
-    "pretrained": 0,
-    "lr": 1e-4,
-    "net_type": "alex",
-    "feat_dim": 256,
-    "epochs": 200,
-    "model": "policy",
-    "env": "trash",
-    "history": 1,
-    "mult": 0,
     "mirror": 0,
-    "rot": "6d-d",
     "data_size": 1.0,
-    "l1": 0.0,
-    "l2": 1.0,
-    "l3": 0.0,
-    "lg": 0.0,
     "rad": "None",
     "xyz_normed": 0,
-    "train": 0,
-    "grip_file": "",
     "rand": 0,
+    "num_workers": 1,
 }
 
 
@@ -58,6 +39,12 @@ def build_parser():
         type=str,
         default="",
         help="optional path to params.json from a previous downstream run",
+    )
+    parser.add_argument(
+        "--save_predictions",
+        type=str,
+        default="",
+        help="optional path to save prediction json",
     )
 
     for key, value in DEFAULTS.items():
@@ -84,7 +71,7 @@ def merge_params(args):
         if value is not None:
             params[key] = value
 
-    required = ["pretrain_path", "train_dir", "val_dir", "test_dir"]
+    required = ["pretrain_path", "test_dir"]
     missing = [k for k in required if not params.get(k)]
     if missing:
         raise ValueError(
@@ -111,29 +98,60 @@ def load_checkpoint_weights(model, checkpoint_path, device):
         print(f"Loaded checkpoint epoch: {checkpoint['epoch']}")
 
 
+def build_test_loader(params):
+    test_set = PushDataset("test", params)
+    loader = DataLoader(
+        test_set,
+        batch_size=params["batch_size"],
+        shuffle=False,
+        num_workers=params["num_workers"],
+        pin_memory=torch.cuda.is_available(),
+        drop_last=False,
+    )
+    return loader, len(test_set)
+
+
+def run_inference(model, loader, device, save_predictions_path=""):
+    predictions = [] if save_predictions_path else None
+    total_samples = 0
+
+    start = time.time()
+    model.eval()
+    with torch.inference_mode():
+        for batch_img_names, batch_imgs, _, _, _ in loader:
+            batch_imgs = batch_imgs.to(device, non_blocking=True)
+            pred_pos = model(batch_imgs).detach().cpu()
+
+            batch_size = pred_pos.size(0)
+            total_samples += batch_size
+
+            if predictions is not None:
+                for img_name, pred in zip(batch_img_names, pred_pos.tolist()):
+                    predictions.append({"image": img_name, "pred_translation": pred})
+
+    elapsed = time.time() - start
+    speed = total_samples / elapsed if elapsed > 0 else 0.0
+    print(f"Inference done: {total_samples} samples, {elapsed:.2f}s, {speed:.2f} samples/s")
+
+    if predictions is not None:
+        save_dir = os.path.dirname(save_predictions_path)
+        if save_dir:
+            os.makedirs(save_dir, exist_ok=True)
+        with open(save_predictions_path, "w") as f:
+            json.dump(predictions, f, indent=2)
+            f.write("\n")
+        print(f"Saved predictions: {save_predictions_path}")
+
+
 def main():
     parser = build_parser()
     args = parser.parse_args()
     params = merge_params(args)
 
-    logdir_prefix = "trashpolicy_" + params["exp_name"] + "_" + params["net_type"] + "_eval"
-    data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), params["save_dir"])
-    os.makedirs(data_path, exist_ok=True)
-
-    logdir = logdir_prefix + "_" + time.strftime("%d-%m-%Y_%H-%M-%S")
-    logdir = os.path.join(data_path, logdir)
-    os.makedirs(logdir, exist_ok=True)
-    params["logdir"] = logdir
-
-    with open(os.path.join(logdir, "params.json"), "w") as outfile:
-        json.dump(params, outfile, indent=4, separators=(",", ": "), sort_keys=True)
-        outfile.write("\n")
-
     device = torch.device(
         "cuda:" + str(params["which_gpu"]) if torch.cuda.is_available() else "cpu"
     )
     print("Device:", device)
-    print("Test-only logdir:", logdir)
 
     model_path = os.path.join(params["pretrain_path"], "transformer-mae-model")
     pretrained_mae = ViTMAEForPreTraining.from_pretrained(model_path)
@@ -144,21 +162,16 @@ def main():
         freeze_encoder=True,
         frozen_layer_num=6,
     ).to(device)
-
     load_checkpoint_weights(model, args.checkpoint_path, device)
 
-    trainer = PushTrainer(model, params)
-    trainer.model.eval()
-    trainer.wandb_dict = {}
-    with torch.no_grad():
-        trainer.run_loop(trainer.test_loader, "test", epoch=0, logdir=logdir, early_stopping=None)
-
-    wandb.log(trainer.wandb_dict)
-
-    print("\nFinal test metrics")
-    for key in sorted(trainer.wandb_dict):
-        if key.startswith("Test "):
-            print(f"{key}: {trainer.wandb_dict[key]}")
+    test_loader, num_test_samples = build_test_loader(params)
+    print(f"Loaded test samples: {num_test_samples}")
+    run_inference(
+        model=model,
+        loader=test_loader,
+        device=device,
+        save_predictions_path=args.save_predictions,
+    )
 
 
 if __name__ == "__main__":

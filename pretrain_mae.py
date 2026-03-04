@@ -72,9 +72,9 @@ def visualize(pixel_values, model, epoch_num, save_dir="transformer-mae"):
     plt.close(fig)
     
 params = {
-    'root_dir': "/nas_data2/research_grants/COMMON_SENSE/data",
-    'train_dir': "/nas_data2/research_grants/COMMON_SENSE/data/train",
-    'val_dir': "/nas_data2/research_grants/COMMON_SENSE/data/val",
+    'root_dir': "/home/junhan/data",
+    'train_dir': "/home/junhan/data/train",
+    'val_dir': "/home/junhan/data/val",
     'data_size': 1.0,
     'epochs': 100,
     'batch_size': 128,

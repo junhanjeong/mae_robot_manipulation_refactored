@@ -12,8 +12,8 @@ from transformers import ViTMAEForPreTraining
 
 
 DEFAULTS = {
-    "pretrain_path": "",
-    "test_dir": "",
+    "pretrain_path": "mae_checkpoint_6",
+    "test_dir": "/home/junhan/data/test",
     "which_gpu": 0,
     "batch_size": 16,
     "mirror": 0,
@@ -32,13 +32,13 @@ def build_parser():
     parser.add_argument(
         "--checkpoint_path",
         type=str,
-        required=True,
+        default="/home/junhan/mae_robot_manipulation_refactored/results/trashpolicy_todo_alex_04-03-2026_10-26-44/policy_earlystop.pt",
         help="path to downstream checkpoint (.pt) saved by PushTrainer",
     )
     parser.add_argument(
         "--params_json",
         type=str,
-        default="",
+        default="/home/junhan/mae_robot_manipulation_refactored/results/trashpolicy_todo_alex_04-03-2026_10-26-44/params.json",
         help="optional path to params.json from a previous downstream run",
     )
     parser.add_argument(

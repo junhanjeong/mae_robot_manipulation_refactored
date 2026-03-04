@@ -19,10 +19,10 @@ from transformers import ViTFeatureExtractor
 def main():
   import argparse
   parser = argparse.ArgumentParser()
-  parser.add_argument('--pretrain_path', type=str, default="", help="path to pretrained encoder checkpoint")
-  parser.add_argument('--train_dir', type=str, default="")
-  parser.add_argument('--val_dir', type=str, default="")
-  parser.add_argument('--test_dir', type=str, default="")
+  parser.add_argument('--pretrain_path', type=str, default="mae_checkpoint_6", help="path to pretrained encoder checkpoint")
+  parser.add_argument('--train_dir', type=str, default="/home/junhan/data/train")
+  parser.add_argument('--val_dir', type=str, default="/home/junhan/data/val")
+  parser.add_argument('--test_dir', type=str, default="/home/junhan/data/test")
   parser.add_argument('--which_gpu', '-gpu_id', default=0)
   parser.add_argument('--save_dir', type=str, default="results")
   parser.add_argument('--exp_name', type=str, default='todo')

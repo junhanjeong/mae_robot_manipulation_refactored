@@ -4,6 +4,7 @@ import time
 
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from dataloader.PushDataset import PushDataset
 from model.forward_model_mae import MAE_Translation
@@ -118,7 +119,9 @@ def run_inference(model, loader, device, save_predictions_path=""):
     start = time.time()
     model.eval()
     with torch.inference_mode():
-        for batch_img_names, batch_imgs, _, _, _ in loader:
+        for batch_img_names, batch_imgs, _, _, _ in tqdm(
+            loader, desc="Inference", total=len(loader)
+        ):
             batch_imgs = batch_imgs.to(device, non_blocking=True)
             pred_pos = model(batch_imgs).detach().cpu()
 

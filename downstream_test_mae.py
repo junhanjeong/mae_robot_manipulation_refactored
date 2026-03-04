@@ -113,7 +113,8 @@ def build_test_loader(params):
 
 def run_inference(model, loader, device):
     total_samples = 0
-    batch_errors = []
+    total_squared_error = 0.0
+    total_elements = 0
 
     start = time.time()
     model.eval()
@@ -128,15 +129,16 @@ def run_inference(model, loader, device):
 
             pred_pos = pred_pos.reshape(pred_pos.size(0), -1)
             real_positions = real_positions.reshape(real_positions.size(0), -1).float()
-            batch_error = torch.mean((pred_pos - real_positions) ** 2)
-            batch_errors.append(batch_error.item())
+            diff = pred_pos - real_positions
+            total_squared_error += torch.sum(diff * diff).item()
+            total_elements += diff.numel()
 
             batch_size = pred_pos.size(0)
             total_samples += batch_size
 
     elapsed = time.time() - start
     speed = total_samples / elapsed if elapsed > 0 else 0.0
-    test_error = sum(batch_errors) / len(batch_errors) if batch_errors else float("nan")
+    test_error = total_squared_error / total_elements if total_elements > 0 else float("nan")
     print(f"Test Error: {test_error:.6f}")
     print(f"Inference done: {total_samples} samples, {elapsed:.2f}s, {speed:.2f} samples/s")
 

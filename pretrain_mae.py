@@ -72,9 +72,9 @@ def visualize(pixel_values, model, epoch_num, save_dir="transformer-mae"):
     plt.close(fig)
     
 params = {
-    'root_dir': "/home/junhan/robot-prune/nas_data2/jihun/commonsense2026/data",
-    'train_dir': "/home/junhan/robot-prune/nas_data2/jihun/commonsense2026/data/train",
-    'val_dir': "/home/junhan/robot-prune/nas_data2/jihun/commonsense2026/data/val",
+    'root_dir': "/nas_data/push_task_dataset",
+    'train_dir': "/nas_data/push_task_dataset/train",
+    'val_dir': "/nas_data/push_task_dataset/val",
     'data_size': 1.0,
     'epochs': 100,
     'batch_size': 128,
@@ -90,7 +90,7 @@ params = {
     'save_dir': './checkpoints',
     'project': 'mae-pretraining',
     'run_name': 'mae-run',
-    'num_workers': 8,
+    'num_workers': 16,
     'train_layer_num': 7
 }
 device = params["device"]

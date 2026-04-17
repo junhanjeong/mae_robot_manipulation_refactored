@@ -24,7 +24,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-save_dir = "mae_checkpoint_6"
+
 feature_extractor = ViTFeatureExtractor.from_pretrained("facebook/vit-mae-base")
 imagenet_mean = np.array(feature_extractor.image_mean)
 imagenet_std = np.array(feature_extractor.image_std)
@@ -72,9 +72,9 @@ def visualize(pixel_values, model, epoch_num, save_dir="transformer-mae"):
     plt.close(fig)
     
 params = {
-    'root_dir': "/home/junhan/data",
-    'train_dir': "/home/junhan/data/train",
-    'val_dir': "/home/junhan/data/val",
+    'root_dir': "/home/junhan/robot-prune/nas_data2/jihun/commonsense2026/data",
+    'train_dir': "/home/junhan/robot-prune/nas_data2/jihun/commonsense2026/data/train",
+    'val_dir': "/home/junhan/robot-prune/nas_data2/jihun/commonsense2026/data/val",
     'data_size': 1.0,
     'epochs': 100,
     'batch_size': 128,
@@ -86,7 +86,7 @@ params = {
     'mask_ratio': 0.75,
     'decoder_dim': 512,
     'decoder_depth': 6,
-    'device': 'cuda:2',
+    'device': 'cuda:0',
     'save_dir': './checkpoints',
     'project': 'mae-pretraining',
     'run_name': 'mae-run',
@@ -163,8 +163,8 @@ for epoch in tqdm(range(num_epochs), desc="Epoch"):
 
     if val_loss < best_val_loss:
         best_val_loss = val_loss
-        model.save_pretrained(f"./{save_dir}/transformer-mae-model")
-        processor.save_pretrained(f"./{save_dir}/transformer-mae-processor")
+        model.save_pretrained(f"./{params['save_dir']}/transformer-mae-model")
+        processor.save_pretrained(f"./{params['save_dir']}/transformer-mae-processor")
         print(f"Saved best model at epoch {epoch} with val_loss={val_loss:.4f}")
 
     # viz each 5 epoch
@@ -180,11 +180,11 @@ for epoch in tqdm(range(num_epochs), desc="Epoch"):
 
             sample = sample_imgs[:1].to(device)
 
-            visualize(sample, model, epoch_num=epoch)
+            visualize(sample, model, epoch_num=epoch, save_dir=f"./{params['save_dir']}/visualizations")
             
     wandb.log({"train_loss": avg_loss, "val_loss": val_loss, "epoch": epoch})
     
-    model.save_pretrained(f"./{save_dir}/transformer-mae-model-{epoch}")
-    processor.save_pretrained(f"./{save_dir}/transformer-mae-processor-{epoch}")
+    model.save_pretrained(f"./{params['save_dir']}/transformer-mae-model-{epoch}")
+    processor.save_pretrained(f"./{params['save_dir']}/transformer-mae-processor-{epoch}")
 
 wandb.finish()

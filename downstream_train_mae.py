@@ -49,8 +49,9 @@ def main():
   parser.add_argument('--train', type=int, default=1)
   parser.add_argument('--grip_file', type=str, required=False)
   parser.add_argument('--rand', type=int, default=0)
-  parser.add_argument('--dir_weight', type=float, default=0.1)
+  parser.add_argument('--dir_weight', type=float, default=0.05)
   parser.add_argument('--mse_weight', type=float, default=1)
+  parser.add_argument('--debug', type=bool, default=False) # debug print
 
   args = parser.parse_args()
 

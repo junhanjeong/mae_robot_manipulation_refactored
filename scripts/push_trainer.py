@@ -43,6 +43,7 @@ class PushTrainer:
     self.l1_loss = nn.L1Loss()
     self.dir_weight = params['dir_weight']
     self.mse_weight = params['mse_weight']
+    self.debug = params.get('debug', False)
 
     self.trans_loss_type = params.get('trans_loss_type', 'mse')
     self.trans_weight = params.get('trans_weight', 1)
@@ -51,20 +52,20 @@ class PushTrainer:
     self.num_train = len(self.train_set)
     self.train_loader = torch.utils.data.DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True,
                                                     sampler=None,
-                                                    batch_sampler=None, num_workers=4,
+                                                    batch_sampler=None, num_workers=16,
                                                     pin_memory=True, drop_last=False, timeout=0,
                                                     worker_init_fn=None)
 
     self.val_set = PushDataset.PushDataset("val", params)
     self.val_loader = torch.utils.data.DataLoader(self.val_set, batch_size=self.batch_size, shuffle=False,
-                                                  num_workers=4,
+                                                  num_workers=16,
                                                   pin_memory=True, drop_last=False, timeout=0,
                                                   worker_init_fn=None)
     self.num_val = len(self.val_set)
 
     self.test_set = PushDataset.PushDataset("test", params)
     self.test_loader = torch.utils.data.DataLoader(self.test_set, batch_size=self.batch_size, shuffle=False,
-                                                   num_workers=1,
+                                                   num_workers=8,
                                                    pin_memory=False, drop_last=False, timeout=0,
                                                    worker_init_fn=None)
     self.num_test = len(self.test_set)
@@ -122,7 +123,7 @@ class PushTrainer:
 
     for i_batch, (batch_img_names, batch_imgs, batch_actions, runs, aug) in enumerate(data_loader):
       # Debug: print shapes/dtypes/devices for the first batch to help trace CUDA errors
-      if i_batch == 0:
+      if i_batch == 0 and self.debug:
         try:
           print(f"[DEBUG] batch_imgs: shape={getattr(batch_imgs,'shape',None)}, dtype={getattr(batch_imgs,'dtype',None)}, device={getattr(batch_imgs,'device',None)}")
           print(f"[DEBUG] batch_actions: shape={getattr(batch_actions,'shape',None)}, dtype={getattr(batch_actions,'dtype',None)}, device={getattr(batch_actions,'device',None)}")
@@ -133,7 +134,7 @@ class PushTrainer:
       batch_actions = batch_actions.to(self.device)
 
       # Debug: after moving to device
-      if i_batch == 0:
+      if i_batch == 0 and self.debug:
         try:
           print(f"[DEBUG after .to()] batch_imgs device={getattr(batch_imgs,'device',None)}, batch_actions device={getattr(batch_actions,'device',None)}")
         except Exception:

@@ -41,8 +41,8 @@ class PushTrainer:
     self.mse_loss = nn.MSELoss()
     self.scaled_mse_loss = nn.MSELoss(reduce=False)
     self.l1_loss = nn.L1Loss()
-    self.dir_weight = 1 # 이것 잠시 조정 (원래는 1)
-    self.mse_weight = 1 # CHANGE THIS
+    self.dir_weight = params['dir_weight']
+    self.mse_weight = params['mse_weight']
 
     self.trans_loss_type = params.get('trans_loss_type', 'mse')
     self.trans_weight = params.get('trans_weight', 1)
@@ -85,7 +85,7 @@ class PushTrainer:
     early_stopping = EarlyStop(patience=150)
     num_epochs = self.epochs
     self.model.to(self.device)
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs), desc="Epoch"):
 
       self.wandb_dict = {}
       ######### TRAIN ===============================================================================================

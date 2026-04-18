@@ -58,3 +58,8 @@ pip install -r requirements.txt
     3.1 Wandb를 통해 학습 및 평가 상태 확인 가능
 4. 학습 종료 이후, `./results` 폴더에서 이미지별 평가 결과를 시각적으로 확인 가능
 
+## Acknowledgement
+This repository is based on the codebase from [Visual-Imitation-Made-Easy](https://github.com/sarahisyoung/Visual-Imitation-Made-Easy/). Thanks for their excellent work.
+
+## Contributors
+Original authors: [홍연주](https://github.com/lightorange0v0), [이성재](https://github.com/ubless607).  

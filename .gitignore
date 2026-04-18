@@ -1,2 +1,5 @@
 # Python cache directories
 __pycache__/
+wandb/
+results/
+checkpoints/

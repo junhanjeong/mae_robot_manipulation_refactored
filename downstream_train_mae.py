@@ -19,14 +19,14 @@ from transformers import ViTFeatureExtractor
 def main():
   import argparse
   parser = argparse.ArgumentParser()
-  parser.add_argument('--pretrain_path', type=str, default="mae_checkpoint_6", help="path to pretrained encoder checkpoint")
-  parser.add_argument('--train_dir', type=str, default="/home/junhan/data/train")
-  parser.add_argument('--val_dir', type=str, default="/home/junhan/data/val")
-  parser.add_argument('--test_dir', type=str, default="/home/junhan/data/test")
-  parser.add_argument('--which_gpu', '-gpu_id', default=0)
+  parser.add_argument('--pretrain_path', type=str, default="data-jihun-checkpoints", help="path to pretrained encoder checkpoint")
+  parser.add_argument('--train_dir', type=str, default="/nas_data2/jihun/commonsense2026/data/train")
+  parser.add_argument('--val_dir', type=str, default="/nas_data2/jihun/commonsense2026/data/val")
+  parser.add_argument('--test_dir', type=str, default="/nas_data2/jihun/commonsense2026/data/test")
+  parser.add_argument('--which_gpu', '-gpu_id', default=3)
   parser.add_argument('--save_dir', type=str, default="results")
   parser.add_argument('--exp_name', type=str, default='todo')
-  parser.add_argument('--batch_size', type=int, default=16)
+  parser.add_argument('--batch_size', type=int, default=128)
   parser.add_argument('--pretrained', type=int, default=0)
   parser.add_argument('--lr', type=float, default=1e-4)
   parser.add_argument('--net_type', default='alex')
@@ -49,6 +49,9 @@ def main():
   parser.add_argument('--train', type=int, default=1)
   parser.add_argument('--grip_file', type=str, required=False)
   parser.add_argument('--rand', type=int, default=0)
+  parser.add_argument('--dir_weight', type=float, default=0.05)
+  parser.add_argument('--mse_weight', type=float, default=1)
+  parser.add_argument('--debug', type=bool, default=False) # debug print
 
   args = parser.parse_args()
 

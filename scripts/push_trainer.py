@@ -1,4 +1,5 @@
 import os
+from tqdm import tqdm
 
 import numpy as np
 import torch
@@ -40,7 +41,7 @@ class PushTrainer:
     self.mse_loss = nn.MSELoss()
     self.scaled_mse_loss = nn.MSELoss(reduce=False)
     self.l1_loss = nn.L1Loss()
-    self.dir_weight = 1
+    self.dir_weight = 1 # 이것 잠시 조정 (원래는 1)
     self.mse_weight = 1 # CHANGE THIS
 
     self.trans_loss_type = params.get('trans_loss_type', 'mse')
@@ -415,7 +416,7 @@ class PushTrainerL1:
     early_stopping = EarlyStop(patience=150)
     num_epochs = self.epochs
     self.model.to(self.device)
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs), desc="Epoch"):
 
       self.wandb_dict = {}
       ######### TRAIN ===============================================================================================

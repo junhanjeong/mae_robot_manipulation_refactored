@@ -72,9 +72,9 @@ def visualize(pixel_values, model, epoch_num, save_dir="transformer-mae"):
     plt.close(fig)
     
 params = {
-    'root_dir': "/nas_data/push_task_dataset",
-    'train_dir': "/nas_data/push_task_dataset/train",
-    'val_dir': "/nas_data/push_task_dataset/val",
+    'root_dir': "/nas_data2/jihun/commonsense2026/data",
+    'train_dir': "/nas_data2/jihun/commonsense2026/data/train",
+    'val_dir': "/nas_data2/jihun/commonsense2026/data/val",
     'data_size': 1.0,
     'epochs': 100,
     'batch_size': 128,
@@ -86,8 +86,8 @@ params = {
     'mask_ratio': 0.75,
     'decoder_dim': 512,
     'decoder_depth': 6,
-    'device': 'cuda:0',
-    'save_dir': './checkpoints',
+    'device': 'cuda:1',
+    'save_dir': './checkpoints-v1',
     'project': 'mae-pretraining',
     'run_name': 'mae-run',
     'num_workers': 16,
